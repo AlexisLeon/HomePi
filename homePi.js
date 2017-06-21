@@ -20,9 +20,8 @@
  * SOFTWARE.
  */
 
-const express = require('express');
+const app = require('express')();
 const morgan = require('morgan');
-const app = express();
 const http = require('http').createServer(app);
 const bodyParser = require('body-parser');
 const mongo = require('mongodb');
@@ -31,6 +30,7 @@ const config = require('config');
 const five = require('johnny-five');
 const initializeDevice = require('./plugins/initializeDevice');
 const log = require('./utils/logger');
+const localAddress = require('./utils/address');
 
 /* Helpers */
 const nodeEnv = process.env.NODE_ENV ? process.env.NODE_ENV : 'development';
@@ -40,31 +40,36 @@ const ObjectID = id => new mongo.ObjectID(id);
 app.set('ipaddr', config.get('ipaddr'));
 app.set('port', config.get('port'));
 app.set('json spaces', 4);
-app.use(morgan(nodeEnv !== 'development' ? 'prod' : 'dev'));
+app.use(morgan(nodeEnv !== 'development' ? 'common' : 'dev'));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(bodyParser.json());
 
 
 /* Connect to Database */
 mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
   if (err) throw new Error(err);
-  log('green', 'Database connection stabilised');
+  log('cyan', 'Database connection stabilised');
 
   /* Start Server */
   http.listen(config.get('port'), config.get('ipaddr'), () => {
-    log('green', `Server runing at http://${config.ipaddr}:${config.port}`);
+    log('inverse', '                                ');
+    log('inverse', `  Running at ${localAddress}:${config.get('port')}  `);
+    log('inverse', '                                ');
   });
 
   /* Initialize Board */
   const board = new five.Board();
-  log('red', 'Waiting for board...');
+  log('yellow', 'Waiting for board...');
 
   board.on('ready', () => {
-    log('green', 'Board ready');
+    log('yellow', 'Board ready');
 
-    /* Socket.IO */
+    /* Socket.io */
     io.on('connection', (socket) => {
-      log('green', 'Client connected');
-      socket.on('disconnect', () => log('red', 'Client disconnected!'));
+      log('cyan', 'CLIENT CONNECTED');
+      socket.on('disconnect', () => log('cyan', 'CLIENT DISCONNECTED'));
 
       /* Initialize Devices */
       db.collection('devices').find({}).toArray((queryErr, result) => {
@@ -80,10 +85,6 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
     res.json({ status: 'running' });
   });
 
-  app.get('/new', (req, res) => {
-    res.sendFile(`${__dirname}/index.html`);
-  });
-
   // Get all devices
   app.get('/devices', (req, res) => {
     db.collection('devices').find({}).toArray((queryErr, result) => {
@@ -91,17 +92,6 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
 
       return res.json(result);
     });
-  });
-
-  // Get single device
-  app.get('/devices/:device_id', (req, res) => {
-    db.collection('devices').findOne(ObjectID(req.params.device_id),
-      ((queryErr, result) => {
-        if (queryErr) return res.send(queryErr);
-
-        return res.json(result);
-      }),
-    );
   });
 
   // Create new Device
@@ -115,11 +105,33 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
         type,
         pin,
         plugin,
-        props,
+        props: props || {},
       }, (insertErr, result) => {
         if (insertErr) return res.send(insertErr);
 
-        log('green', `New device created: ${req.body}`);
+        log('cyan', `New device created: ${req.body.name}`);
+        return res.json(req.body);
+      });
+  });
+
+  // Get single device
+  app.get('/devices/:device_id', (req, res) => {
+    db.collection('devices').findOne(ObjectID(req.params.device_id),
+      ((queryErr, result) => {
+        if (queryErr) return res.send(queryErr);
+
+        return res.json(result);
+      }),
+    );
+  });
+
+  // Delete device
+  app.delete('/devices/:device_id', (req, res) => {
+    db.collection('devices')
+      .remove(ObjectID(req.params.device_id), (deleteErr, result) => {
+        if (deleteErr) return res.send(deleteErr);
+
+        log('cyan', `Device removed: ${req.body.params.device_id}`);
         return res.json(result);
       });
   });

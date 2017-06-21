@@ -23,9 +23,9 @@
 const log = require('../utils/logger');
 
 module.exports = (five, socket, deviceData) => {
-  log('yellow', `${deviceData.type} ${deviceData.name} loaded`);
+  log('yellow', `LOADING DEVICE ${deviceData.type.toUpperCase()} "${deviceData.name}"`);
 
-  const { _id, pin } = deviceData;
+  const { _id, pin, props } = deviceData;
   let plugin;
   let device;
 
@@ -39,7 +39,7 @@ module.exports = (five, socket, deviceData) => {
       plugin = 'relay';
       device = new five.Relay({
         pin,
-        type: deviceData.props.type,
+        type: props.type,
       });
       break;
 
@@ -92,7 +92,7 @@ module.exports = (five, socket, deviceData) => {
 
   // Attach event and it's action to socket
   socket.on(_id, (data) => {
-    log('magenta', `${deviceData.type} ${deviceData.name} ${data}`);
+    console.log(log.colors.cyan(`RECEIVED ${_id}`), log.colors.magenta(data));
     require(`./${plugin}`)(socket, device, data);
   });
 };
