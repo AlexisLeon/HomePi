@@ -21,5 +21,5 @@
 
 #!/usr/bin/env bash
 # This script only works on raspberry pi
-cd /users/pi/HomePi
+cd /home/pi/HomePi
 npm start
