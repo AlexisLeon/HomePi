@@ -28,21 +28,14 @@ module.exports.actions = (socket, data, device, deviceData) => {
       socket.emmit(deviceData._id, device);
       break;
 
-    case 'on':
-    case 'ON':
-      device.on();
-      socket.emmit(deviceData._id, device);
-      break;
-
-    case 'off':
-    case 'OFF':
-      device.off();
-      socket.emmit(deviceData._id, device);
-      break;
-
     default:
       break;
   }
 };
 
-module.exports.events = (socket, device, deviceData) => {};
+module.exports.events = (socket, device, deviceData) => {
+  device.on('change', (value) => {
+    log('blue', `${value.celsius}°C  ${value.fahrenheit}°F  ${value.kelvin}°K`);
+    socket.emit(deviceData._id, value);
+  });
+};

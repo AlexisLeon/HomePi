@@ -23,17 +23,17 @@
 const log = require('../utils/logger');
 
 module.exports = (five, socket, deviceData) => {
-  log('yellow', `LOADING DEVICE ${deviceData.type.toUpperCase()} "${deviceData.name}"`);
+  log('yellow', `LOADING DEVICE: ${deviceData.type.toUpperCase()} "${deviceData.name}"`);
 
-  const { _id, pin, props } = deviceData;
+  const { _id, type, pin, props } = deviceData;
   let plugin;
   let device;
 
   // Create new instance of plugin type
-  switch (deviceData.type) {
+  switch (type) {
     /*
-     * @param pin
-     * @param type
+     * @param {Number, String} pin
+     * @param {String} type
      */
     case 'relay':
       plugin = 'relay';
@@ -45,13 +45,13 @@ module.exports = (five, socket, deviceData) => {
 
 
     /*
-     * @param controller
-     * @param pin
-     * @param toCelsius
-     * @param freq
+     * @param {String} controller
+     * @param {Number, String} pin
+     * @param {Function} toCelsius
+     * @param {Number} freq
      */
-    case 'temperature':
-      plugin = 'temperature';
+    case 'thermometer':
+      plugin = 'thermometer';
       device = new five.Thermometer({
         controller: deviceData.props.controller,
         pin,
@@ -61,11 +61,11 @@ module.exports = (five, socket, deviceData) => {
       break;
 
     /*
-     * @param controller
-     * @param freq
+     * @param {String} controller
+     * @param {Number} freq
      */
-    case 'humidity':
-      plugin = 'humidity';
+    case 'hygrometer':
+      plugin = 'hygrometer';
       device = new five.Hygrometer({
         controller: deviceData.props.controller,
         freq: deviceData.props.freq,
@@ -73,13 +73,23 @@ module.exports = (five, socket, deviceData) => {
       break;
 
     /*
-     * @param pin
-     * @param controller
+     * @param {Number, String} pin
+     * @param {String} controller
      */
     case 'motion':
       plugin = 'motion';
       device = new five.Motion({
         pin,
+        controller: deviceData.props.controller,
+      });
+      break;
+
+    /*
+     * @param {String} controller
+     */
+    case 'multi':
+      plugin = 'multi';
+      device = new five.Multi({
         controller: deviceData.props.controller,
       });
       break;
@@ -90,9 +100,23 @@ module.exports = (five, socket, deviceData) => {
       // plugin = deviceData.plugin;
   }
 
-  // Attach event and it's action to socket
+  /*
+   * @param {Object} socket From io.sockets
+   * @param {Object} data Socket event data (if apply)
+   * @param {Object} device New created device
+   * @param {Object} deviceData Device info/props
+   *
+   * eslint-disable-next-line global-require import/no-dynamic-require
+   */
+  const devicePlugin = require(`./${plugin}`);
+
+  // Attach device events
+  devicePlugin.events(socket, device, deviceData);
+
+  // Attach device actions to socket
   socket.on(_id, (data) => {
-    console.log(log.colors.cyan(`RECEIVED ${_id}`), log.colors.magenta(data));
-    require(`./${plugin}`)(socket, device, data);
+    log('cyan', `RECEIVED ${_id}`, 'magenta', data);
+
+    devicePlugin.actions(socket, data, device, deviceData);
   });
 };

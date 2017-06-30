@@ -22,12 +22,21 @@
 
 const log = require('../utils/logger');
 
-module.exports = (socket, multi, data) => {
-  multi.on('change', (value) => {
-    log('blue', `Temperature ${value.thermometer.celsius}°C  ${value.thermometer.fahrenheit}°F  ${value.thermometer.kelvin}°K`);
-    log('blue', `Relative Humidity ${value.hygrometer.relativeHumidity}`);
+module.exports.actions = (socket, data, device, deviceData) => {
+  switch (data) {
+    case 'get':
+      socket.emmit(deviceData._id, device);
+      break;
 
-    socket.emit('temperature', value.thermometer);
-    socket.emit('humidity', value.hygrometer.relativeHumidity);
+    default:
+      break;
+  }
+};
+
+module.exports.events = (socket, device, deviceData) => {
+  device.on('change', (value) => {
+    log('blue', 'Multi updated');
+
+    socket.emit(deviceData._id, value);
   });
 };

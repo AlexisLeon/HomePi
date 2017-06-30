@@ -25,19 +25,7 @@ const log = require('../utils/logger');
 module.exports.actions = (socket, data, device, deviceData) => {
   switch (data) {
     case 'get':
-      socket.emmit(deviceData._id, device);
-      break;
-
-    case 'on':
-    case 'ON':
-      device.on();
-      socket.emmit(deviceData._id, device);
-      break;
-
-    case 'off':
-    case 'OFF':
-      device.off();
-      socket.emmit(deviceData._id, device);
+      socket.emmit(`${deviceData._id}`, device);
       break;
 
     default:
@@ -45,4 +33,22 @@ module.exports.actions = (socket, data, device, deviceData) => {
   }
 };
 
-module.exports.events = (socket, device, deviceData) => {};
+module.exports.events = (socket, device, deviceData) => {
+  device.on('calibrated', () => {
+    log('blue', 'Motion calibrated');
+
+    socket.emit(deviceData._id, device);
+  });
+
+  device.on('motionstart', () => {
+    log('blue', 'Motion started');
+
+    socket.emit(deviceData._id, device);
+  });
+
+  device.on('motionend', () => {
+    log('blue', 'Motion ended');
+
+    socket.emit(deviceData._id, device);
+  });
+};
