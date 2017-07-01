@@ -22,19 +22,27 @@
 
 const log = require('../utils/logger');
 
-module.exports = (socket, relay, data) => {
+module.exports.actions = (socket, data, device, deviceData) => {
   switch (data) {
+    case 'get':
+      socket.emmit(deviceData._id, device);
+      break;
+
     case 'on':
     case 'ON':
-      relay.on();
+      device.on();
+      socket.emmit(deviceData._id, device);
       break;
 
     case 'off':
     case 'OFF':
-      relay.off();
+      device.off();
+      socket.emmit(deviceData._id, device);
       break;
 
     default:
       break;
   }
 };
+
+module.exports.events = (socket, device, deviceData) => {};

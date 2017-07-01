@@ -1,4 +1,4 @@
-# F8 App 2016
+# Home Pi App
 
 This is the entire source code of [Home Pi](https://github.com/AlexisLeon/HomePi)
 

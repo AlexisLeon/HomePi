@@ -36,27 +36,33 @@ const localAddress = require('./utils/address');
 const nodeEnv = process.env.NODE_ENV ? process.env.NODE_ENV : 'development';
 const ObjectID = id => new mongo.ObjectID(id);
 
-/* Server config */
-app.set('ipaddr', config.get('ipaddr'));
-app.set('port', config.get('port'));
-app.set('json spaces', 4);
-app.use(morgan(nodeEnv !== 'development' ? 'common' : 'dev'));
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
-app.use(bodyParser.json());
-
-
 /* Connect to Database */
 mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
   if (err) throw new Error(err);
   log('cyan', 'Database connection stabilised');
+
+  /* Server config */
+  app.set('json spaces', 4);
+  app.set('ipaddr', config.get('ipaddr'));
+  app.set('port', config.get('port'));
+  app.set('sockets', io.sockets);
+  app.use(morgan(nodeEnv !== 'development' ? 'common' : 'dev'));
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({
+    extended: true,
+  }));
 
   /* Start Server */
   http.listen(config.get('port'), config.get('ipaddr'), () => {
     log('inverse', '                                ');
     log('inverse', `  Running at ${localAddress}:${config.get('port')}  `);
     log('inverse', '                                ');
+  });
+
+  /* Socket.io */
+  io.sockets.on('connection', (socket) => {
+    log('cyan', 'CLIENT CONNECTED');
+    socket.on('disconnect', () => log('cyan', 'CLIENT DISCONNECTED'));
   });
 
   /* Initialize Board */
@@ -66,18 +72,14 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
   board.on('ready', () => {
     log('yellow', 'Board ready');
 
-    /* Socket.io */
-    io.on('connection', (socket) => {
-      log('cyan', 'CLIENT CONNECTED');
-      socket.on('disconnect', () => log('cyan', 'CLIENT DISCONNECTED'));
-
-      /* Initialize Devices */
-      db.collection('devices').find({}).toArray((queryErr, result) => {
+    /* Initialize Devices */
+    db.collection('devices')
+      .find({})
+      .toArray((queryErr, result) => {
         if (queryErr) throw new Error(queryErr);
 
-        result.map(device => initializeDevice(five, socket, device));
+        result.map(device => initializeDevice(five, io.sockets, device));
       });
-    });
   });
 
   /* Server routing */
@@ -87,41 +89,45 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
 
   // Get all devices
   app.get('/devices', (req, res) => {
-    db.collection('devices').find({}).toArray((queryErr, result) => {
-      if (queryErr) return res.send(queryErr);
+    db.collection('devices')
+      .find({})
+      .toArray((queryErr, result) => {
+        if (queryErr) return res.send(queryErr);
 
-      return res.json(result);
-    });
+        return res.json(result);
+      });
   });
 
   // Create new Device
-  app.post('/devices', (req, res) => {
+  app.post('/devices', async (req, res) => {
     const { name, description, type, pin, plugin, props } = req.body;
+    const newDevice = {
+      name,
+      description,
+      type,
+      pin,
+      plugin,
+      props: props || {},
+    };
 
     db.collection('devices')
-      .insertOne({
-        name,
-        description,
-        type,
-        pin,
-        plugin,
-        props: props || {},
-      }, (insertErr, result) => {
+      .insertOne(newDevice, (insertErr) => {
         if (insertErr) return res.send(insertErr);
 
-        log('cyan', `New device created: ${req.body.name}`);
-        return res.json(req.body);
+        log('cyan', `New device created: "${req.body.name}"`);
+        initializeDevice(five, io.sockets, newDevice);
+        return res.json(newDevice);
       });
   });
 
   // Get single device
   app.get('/devices/:device_id', (req, res) => {
     db.collection('devices').findOne(ObjectID(req.params.device_id),
-      ((queryErr, result) => {
+      (queryErr, result) => {
         if (queryErr) return res.send(queryErr);
 
         return res.json(result);
-      }),
+      },
     );
   });
 

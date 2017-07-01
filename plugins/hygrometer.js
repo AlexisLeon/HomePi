@@ -22,9 +22,21 @@
 
 const log = require('../utils/logger');
 
-module.exports = (socket, device, data) => {
+module.exports.actions = (socket, data, device, deviceData) => {
+  switch (data) {
+    case 'get':
+      socket.emmit(`${deviceData._id}`, device);
+      break;
+
+    default:
+      break;
+  }
+};
+
+module.exports.events = (socket, device, deviceData) => {
   device.on('change', (value) => {
-    log('blue', `${value.celsius}°C  ${value.fahrenheit}°F  ${value.kelvin}°K`);
-    socket.emit('temperature', value);
+    log('blue', `Relative Humidity ${value.relativeHumidity}`);
+
+    socket.emit('humidity', device);
   });
 };

@@ -20,17 +20,22 @@
  * SOFTWARE.
  */
 
-const os = require('os');
+const log = require('../utils/logger');
 
-const interfaces = os.networkInterfaces();
-let addresses = [];
-for(var k in interfaces) {
-  for(var k2 in interfaces[k]) {
-    var address = interfaces[k][k2];
-    if (address.family === 'IPv4' && !address.internal) {
-      addresses.push(address.address);
-    }
+module.exports.actions = (socket, data, device, deviceData) => {
+  switch (data) {
+    case 'get':
+      socket.emmit(deviceData._id, device);
+      break;
+
+    default:
+      break;
   }
-}
+};
 
-module.exports = addresses[0];
+module.exports.events = (socket, device, deviceData) => {
+  device.on('change', (value) => {
+    log('blue', `${value.celsius}°C  ${value.fahrenheit}°F  ${value.kelvin}°K`);
+    socket.emit(deviceData._id, value);
+  });
+};
