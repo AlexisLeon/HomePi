@@ -25,7 +25,7 @@ const log = require('../utils/logger');
 module.exports.actions = (socket, data, device, deviceData) => {
   switch (data) {
     case 'get':
-      socket.emmit(`${deviceData._id}`, device);
+      socket.emit(`${deviceData._id}`, device);
       break;
 
     default:
