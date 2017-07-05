@@ -22,10 +22,10 @@
 
 const app = require('express')();
 const morgan = require('morgan');
-const http = require('http').createServer(app);
+const http = require('http').Server(app);
 const bodyParser = require('body-parser');
 const mongo = require('mongodb');
-const io = require('socket.io').listen(http);
+const io = require('socket.io')(http);
 const config = require('config');
 const five = require('johnny-five');
 const initializeDevice = require('./plugins/initializeDevice');
