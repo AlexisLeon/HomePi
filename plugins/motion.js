@@ -21,11 +21,14 @@
  */
 
 const log = require('../utils/logger');
+const parseData = require('./utils/parseData');
 
 module.exports.actions = (socket, data, device, deviceData) => {
+  const { _id } = deviceData;
+
   switch (data) {
     case 'get':
-      socket.emit(`${deviceData._id}`, device);
+      socket.emit(_id, parseData(device));
       break;
 
     default:
@@ -34,21 +37,23 @@ module.exports.actions = (socket, data, device, deviceData) => {
 };
 
 module.exports.events = (socket, device, deviceData) => {
+  const { _id } = deviceData;
+
   device.on('calibrated', () => {
     log('blue', 'Motion calibrated');
 
-    socket.emit(deviceData._id, device);
+    socket.emit(_id, parseData(device));
   });
 
   device.on('motionstart', () => {
     log('blue', 'Motion started');
 
-    socket.emit(deviceData._id, device);
+    socket.emit(_id, parseData(device));
   });
 
   device.on('motionend', () => {
     log('blue', 'Motion ended');
 
-    socket.emit(deviceData._id, device);
+    socket.emit(_id, parseData(device));
   });
 };

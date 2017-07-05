@@ -23,10 +23,10 @@
 const log = require('../utils/logger');
 
 module.exports = (five, socket, deviceData) => {
-  const { _id, type, pin, props } = deviceData;
+  const { _id, type, pin } = deviceData;
+  const properties = {};
   let plugin;
   let device;
-  let properties = {};
 
   log(
     'yellow', 'LOADING DEVICE',
@@ -99,19 +99,19 @@ module.exports = (five, socket, deviceData) => {
   }
 
   /*
-   * @param {Object} socket From io.sockets
+   * @param {Object} socket From io.socket
    * @param {Object} data Socket event data (if apply)
    * @param {Object} device New created device
    * @param {Object} deviceData Device info/props
    *
-   * eslint-disable-next-line global-require import/no-dynamic-require
+   * eslint-disable-next-line global-require import/no-dynamic-require global-require
    */
   const devicePlugin = require(`./${plugin}`);
 
   // Attach device events
   devicePlugin.events(socket, device, deviceData);
 
-  // Attach device actions to socket
+  // Attach device actions to socket.io
   socket.on(_id, (data) => {
     log('cyan', `RECEIVED ${_id}`, 'magenta', data);
 

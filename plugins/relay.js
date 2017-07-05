@@ -21,23 +21,26 @@
  */
 
 const log = require('../utils/logger');
+const parseData = require('./utils/parseData');
 
 module.exports.actions = (socket, data, device, deviceData) => {
+  const { _id } = deviceData;
+
   switch (data) {
     case 'get':
-      socket.emit(deviceData._id, device);
+      socket.emit(_id, parseData(device));
       break;
 
     case 'on':
     case 'ON':
       device.on();
-      socket.emit(deviceData._id, device);
+      socket.emit(_id, parseData(device));
       break;
 
     case 'off':
     case 'OFF':
       device.off();
-      socket.emit(deviceData._id, device);
+      socket.emit(_id, parseData(device));
       break;
 
     default:

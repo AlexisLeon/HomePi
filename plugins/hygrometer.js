@@ -21,11 +21,14 @@
  */
 
 const log = require('../utils/logger');
+const parseData = require('./utils/parseData');
 
 module.exports.actions = (socket, data, device, deviceData) => {
+  const { _id } = deviceData;
+
   switch (data) {
     case 'get':
-      socket.emit(`${deviceData._id}`, device);
+      socket.emit(_id, parseData(device));
       break;
 
     default:
@@ -34,9 +37,11 @@ module.exports.actions = (socket, data, device, deviceData) => {
 };
 
 module.exports.events = (socket, device, deviceData) => {
+  const { _id } = deviceData;
+
   device.on('change', (value) => {
     log('blue', `Relative Humidity ${value.relativeHumidity}`);
 
-    socket.emit('humidity', device);
+    socket.emit(_id, parseData(value));
   });
 };
