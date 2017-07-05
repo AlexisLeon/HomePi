@@ -67,16 +67,18 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
 
   /* Initialize Board */
   const board = new five.Board();
-  log('yellow', 'Waiting for board...');
+  log('yellow', 'WAITING FOR BOARD...');
 
   board.on('ready', () => {
-    log('yellow', 'Board ready');
+    log('yellow', 'BOARD READY');
 
     /* Initialize Devices */
     db.collection('devices')
       .find({})
       .toArray((queryErr, result) => {
         if (queryErr) throw new Error(queryErr);
+
+        log('yellow', 'LOADING DEVICES');
 
         result.map(device => initializeDevice(five, io.sockets, device));
       });
@@ -100,21 +102,31 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
 
   // Create new Device
   app.post('/devices', async (req, res) => {
-    const { name, description, type, pin, plugin, props } = req.body;
-    const newDevice = {
+    const { name, type } = req.body;
+    const newDevice = { // Required props
       name,
-      description,
       type,
-      pin,
-      plugin,
-      props: props || {},
+      props: {}
     };
 
+    // TODO: validate device props, eg. missing params
+
+    // Create Document Object
+    Object.keys(req.body).map((prop) => {
+      newDevice[prop] = req.body[prop]
+    });
+
+    // Insert document
     db.collection('devices')
       .insertOne(newDevice, (insertErr) => {
         if (insertErr) return res.send(insertErr);
 
-        log('cyan', `New device created: "${req.body.name}"`);
+        log(
+          'cyan', `CREATED NEW DEVICE`,
+          'magenta', req.body.type,
+          'cyan', `"${req.body.name}"`
+        );
+
         initializeDevice(five, io.sockets, newDevice);
         return res.json(newDevice);
       });
@@ -137,7 +149,10 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
       .remove(ObjectID(req.params.device_id), (deleteErr, result) => {
         if (deleteErr) return res.send(deleteErr);
 
-        log('cyan', `Device removed: ${req.body.params.device_id}`);
+        log(
+          'cyan', 'REMOVED DEVICE',
+          'magenta', req.body.params.device_id
+        );
         return res.json(result);
       });
   });

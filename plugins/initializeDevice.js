@@ -23,11 +23,21 @@
 const log = require('../utils/logger');
 
 module.exports = (five, socket, deviceData) => {
-  log('yellow', `LOADING DEVICE: ${deviceData.type.toUpperCase()} "${deviceData.name}"`);
-
   const { _id, type, pin, props } = deviceData;
   let plugin;
   let device;
+  let properties = {};
+
+  log(
+    'yellow', 'LOADING DEVICE',
+    'green', deviceData.type,
+    'yellow', `"${deviceData.name}"`
+  );
+
+  // Dynamically assign properties
+  Object.keys(deviceData.props).map((prop) => {
+    properties[prop] = deviceData.props[prop]
+  });
 
   // Create new instance of plugin type
   switch (type) {
@@ -37,10 +47,8 @@ module.exports = (five, socket, deviceData) => {
      */
     case 'relay':
       plugin = 'relay';
-      device = new five.Relay({
-        pin,
-        type: props.type,
-      });
+      properties.pin = pin;
+      device = new five.Relay(properties);
       break;
 
 
@@ -52,12 +60,8 @@ module.exports = (five, socket, deviceData) => {
      */
     case 'thermometer':
       plugin = 'thermometer';
-      device = new five.Thermometer({
-        controller: deviceData.props.controller,
-        pin,
-        toCelsius: deviceData.props.toCelsius,
-        freq: deviceData.props.freq,
-      });
+      properties.pin = pin;
+      device = new five.Thermometer(properties);
       break;
 
     /*
@@ -66,10 +70,8 @@ module.exports = (five, socket, deviceData) => {
      */
     case 'hygrometer':
       plugin = 'hygrometer';
-      device = new five.Hygrometer({
-        controller: deviceData.props.controller,
-        freq: deviceData.props.freq,
-      });
+      properties.pin = pin;
+      device = new five.Hygrometer(properties);
       break;
 
     /*
@@ -78,10 +80,8 @@ module.exports = (five, socket, deviceData) => {
      */
     case 'motion':
       plugin = 'motion';
-      device = new five.Motion({
-        pin,
-        controller: deviceData.props.controller,
-      });
+      properties.pin = pin;
+      device = new five.Motion(properties);
       break;
 
     /*
@@ -89,9 +89,7 @@ module.exports = (five, socket, deviceData) => {
      */
     case 'multi':
       plugin = 'multi';
-      device = new five.Multi({
-        controller: deviceData.props.controller,
-      });
+      device = new five.Multi(properties);
       break;
 
     // Custom device type
