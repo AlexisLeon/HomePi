@@ -89,6 +89,10 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
     res.json({ status: 'running' });
   });
 
+  app.get('/socket', (req, res) => {
+    res.sendFile(__dirname + '/socket.html');
+  });
+
   // Get all devices
   app.get('/devices', (req, res) => {
     db.collection('devices')
