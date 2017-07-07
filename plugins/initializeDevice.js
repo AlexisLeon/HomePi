@@ -22,7 +22,7 @@
 
 const log = require('../utils/logger');
 
-module.exports = (five, socket, deviceData) => {
+module.exports = (five, io, deviceData) => {
   const { _id, type, pin } = deviceData;
   const properties = {};
   let plugin;
@@ -108,13 +108,15 @@ module.exports = (five, socket, deviceData) => {
    */
   const devicePlugin = require(`./${plugin}`);
 
-  // Attach device events
-  devicePlugin.events(socket, device, deviceData);
+  io.on('connection', (socket) => {
+    // Attach device events
+    devicePlugin.events(socket, device, deviceData);
 
-  // Attach device actions to socket.io
-  socket.on(_id, (data) => {
-    log('cyan', `RECEIVED ${_id}`, 'magenta', data);
+    // Attach device actions to socket.io
+    socket.on(_id, (data) => {
+      log('cyan', `RECEIVED ${_id}`, 'magenta', data);
 
-    devicePlugin.actions(socket, data, device, deviceData);
+      devicePlugin.actions(socket, data, device, deviceData);
+    });
   });
 };
