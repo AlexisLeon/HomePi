@@ -41,6 +41,6 @@ module.exports.events = (socket, device, deviceData) => {
 
   device.on('change', (value) => {
     log('blue', `${value.celsius}°C  ${value.fahrenheit}°F  ${value.kelvin}°K`);
-    socket.emit(_id, parseData(value));
+    socket.emit(_id, value);
   });
 };
