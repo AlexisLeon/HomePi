@@ -26,8 +26,8 @@ const http = require('http').Server(app);
 const bodyParser = require('body-parser');
 const mongo = require('mongodb');
 const io = require('socket.io')(http);
-const config = require('config');
 const five = require('johnny-five');
+const config = require('./config.json');
 const initializeDevice = require('./plugins/initializeDevice');
 const log = require('./utils/logger');
 const localAddress = require('./utils/address');
@@ -37,14 +37,14 @@ const nodeEnv = process.env.NODE_ENV ? process.env.NODE_ENV : 'development';
 const ObjectID = id => new mongo.ObjectID(id);
 
 /* Connect to Database */
-mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
+mongo.MongoClient.connect(config.mongo, (err, db) => {
   if (err) throw new Error(err);
   log('cyan', 'Database connection stabilised');
 
   /* Server config */
   app.set('json spaces', 4);
-  app.set('ipaddr', config.get('ipaddr'));
-  app.set('port', config.get('port'));
+  app.set('ipaddr', config.ipaddr);
+  app.set('port', config.port);
   app.set('sockets', io.sockets);
   app.use(morgan(nodeEnv !== 'development' ? 'common' : 'dev'));
   app.use(bodyParser.json());
@@ -53,9 +53,9 @@ mongo.MongoClient.connect(config.get('mongo'), (err, db) => {
   }));
 
   /* Start Server */
-  http.listen(config.get('port'), config.get('ipaddr'), () => {
+  http.listen(config.port, config.ipaddr, () => {
     log('inverse', '                                ');
-    log('inverse', `  Running at ${localAddress}:${config.get('port')}  `);
+    log('inverse', `  Running at ${localAddress}:${config.port}  `);
     log('inverse', '                                ');
   });
 

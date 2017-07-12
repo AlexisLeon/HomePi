@@ -9,6 +9,10 @@
     "lint": "eslint homePi.js",
     "test": "jest"
   },
+  "bin": {
+    "homepi": "bin/homepi"
+  },
+  "preferGlobal": true,
   "repository": {
     "type": "git",
     "url": "git://github.com/AlexisLeon/HomePi.git"
