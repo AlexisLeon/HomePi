@@ -39,20 +39,30 @@ $ yarn start
 
 ### Installing
 
-Clone project and install modules
+**Clone project and install modules**
 ```bash
 git clone https://github.com/AlexisLeon/HomePi.git
 cd HomePi
 yarn install
 ```
 
-To use as binary `homepi` do follows:
+**To use as binary `homepi` do follows:**
 
 ```
 npm link
 ```
 
-Connect your board and start the server
+If you get error `Error: EACCES: permission denied, symlink '/home/pi/HomePi' -> /usr/lib/node_modules/HomePi'` try:
+
+```bash
+sudo chmod 777 -R /usr/lib/node_modules/HomePi
+sudo chmod 777 -R /usr/bin/
+
+# Run link
+npm link
+```
+
+**Connect your board and start the server**
 
 ```
 $ homepi
@@ -67,7 +77,7 @@ WAITING FOR BOARD...
 ...
 ```
 
-Open [http://localhost:8080](http://localhost:8080)
+**Open** [http://localhost:8080](http://localhost:8080)
 
 ## Running the tests
 
