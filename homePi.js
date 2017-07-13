@@ -31,10 +31,10 @@ const config = require('./config.json');
 const initializeDevice = require('./plugins/initializeDevice');
 const log = require('./utils/logger');
 const localAddress = require('./utils/address');
+const routes = require('./api/routes');
 
 /* Helpers */
 const nodeEnv = process.env.NODE_ENV ? process.env.NODE_ENV : 'development';
-const ObjectID = id => new mongo.ObjectID(id);
 
 /* Connect to Database */
 mongo.MongoClient.connect(config.mongo, (err, db) => {
@@ -85,79 +85,5 @@ mongo.MongoClient.connect(config.mongo, (err, db) => {
   });
 
   /* Server routing */
-  app.get('/', (req, res) => {
-    res.json({ status: 'running' });
-  });
-
-  app.get('/socket', (req, res) => {
-    res.sendFile(__dirname + '/socket.html');
-  });
-
-  // Get all devices
-  app.get('/devices', (req, res) => {
-    db.collection('devices')
-      .find({})
-      .toArray((queryErr, result) => {
-        if (queryErr) return res.send(queryErr);
-
-        return res.json(result);
-      });
-  });
-
-  // Create new Device
-  app.post('/devices', async (req, res) => {
-    const { name, type } = req.body;
-    const newDevice = { // Required props
-      name,
-      type,
-      props: {}
-    };
-
-    // TODO: validate device props, eg. missing params
-
-    // Create Document Object
-    Object.keys(req.body).map((prop) => {
-      newDevice[prop] = req.body[prop]
-    });
-
-    // Insert document
-    db.collection('devices')
-      .insertOne(newDevice, (insertErr) => {
-        if (insertErr) return res.send(insertErr);
-
-        log(
-          'cyan', `CREATED NEW DEVICE`,
-          'magenta', req.body.type,
-          'cyan', `"${req.body.name}"`
-        );
-
-        initializeDevice(five, io.sockets, newDevice);
-        return res.json(newDevice);
-      });
-  });
-
-  // Get single device
-  app.get('/devices/:device_id', (req, res) => {
-    db.collection('devices').findOne(ObjectID(req.params.device_id),
-      (queryErr, result) => {
-        if (queryErr) return res.send(queryErr);
-
-        return res.json(result);
-      },
-    );
-  });
-
-  // Delete device
-  app.delete('/devices/:device_id', (req, res) => {
-    db.collection('devices')
-      .remove(ObjectID(req.params.device_id), (deleteErr, result) => {
-        if (deleteErr) return res.send(deleteErr);
-
-        log(
-          'cyan', 'REMOVED DEVICE',
-          'magenta', req.body.params.device_id
-        );
-        return res.json(result);
-      });
-  });
+  routes(app, io, db, five);
 });
