@@ -2,5 +2,11 @@
   "ipaddr": "0.0.0.0",
   "port": "8080",
   "secret": "secret",
-  "mongo": "mongodb://localhost:27017/homePi"
+  "mongo": "mongodb://localhost:27017/homePi",
+  "bridge": {
+      "name": "HomePi",
+      "username": "CC:22:3D:E3:CE:30",
+      "port": 51826,
+      "pin": "031-45-154"
+  }
 }

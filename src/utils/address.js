@@ -33,4 +33,4 @@ for(var k in interfaces) {
   }
 }
 
-module.exports = addresses[0];
+module.exports = addresses[0] || '127.0.0.1';

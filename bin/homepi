@@ -2,8 +2,8 @@
 
 process.title = 'HomePi';
 
-var path = require('path');
-var fs = require('fs');
-var lib = path.join(path.dirname(fs.realpathSync(__filename)), '..');
+const path = require('path');
+const fs = require('fs');
+const src = path.join(path.dirname(fs.realpathSync(__filename)), '../src');
 
-require(lib + '/homePi');
+require(src + '/cli')();
