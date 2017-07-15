@@ -66,14 +66,17 @@ npm link
 
 ```
 $ homepi
-Database connection stabilised
+Database connection established
 WAITING FOR BOARD...
+HAP running on port 59813.
+Scan this code to pair with HomePi:
 
-  ┌────────────────────────────────┐  
-  │  Running at 192.168.1.64:8080  │  
-  └────────────────────────────────┘  
+    ┌────────────┐    
+    │ 031-45-154 │    
+    └────────────┘    
 
-1499908741596 Board Looking for connected device
+HTTP running on 192.168.1.64:8080
+1500142425846 Board Looking for connected device
 ...
 ```
 

@@ -132,7 +132,7 @@ Server.prototype.loadAccessories = function() {
 Server.prototype.connectDB = function(callback) {
   mongo.MongoClient.connect(config.mongo, (err, db) => {
     if (err) throw new Error(err);
-    log('cyan', 'Database connection stabilised');
+    log('cyan', 'Database connection established');
 
     this.db = db;
 
