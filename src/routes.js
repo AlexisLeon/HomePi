@@ -39,9 +39,12 @@ module.exports = (app, db, five) => {
     const { name, type, category } = req.body;
     const newAccessory = { // Required props
       name,
-      type,
-      category,
-      props: {}
+      component: { // Johnny-Five
+        type,
+      },
+      accessory: { // HAP
+        category,
+      }
     };
 
     // TODO: validate accessory props, eg. missing params
