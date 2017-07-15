@@ -18,8 +18,8 @@ module.exports = (accessories) => {
   const loadedAccessories = [];
 
   accessories.forEach((accessory) => {
-    debug('Parsing accessory: %s', accessory.category);
-    const loadedAccessory = require(path.join(__dirname, accessory.category))(accessory);
+    debug('Parsing accessory: %s', accessory.accessory.category);
+    const loadedAccessory = require(path.join(__dirname, accessory.accessory.category))(accessory);
     loadedAccessories.push(loadedAccessory);
   });
 
