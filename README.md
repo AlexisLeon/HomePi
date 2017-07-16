@@ -15,6 +15,12 @@ $ yarn start
 
 ### Prerequisites
 
+**Required packages for Debian based systems**
+
+```
+sudo apt-get install libavahi-compat-libdnssd-dev
+```
+
 **[Node JS](https://nodejs.org)**
 
   ```bash
