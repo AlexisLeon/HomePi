@@ -14,51 +14,52 @@
 } = require('hap-nodejs');
 const five = require('johnny-five');
 
-module.exports = ({ accessory, component }) => {
-  const GARAGE = {
+module.exports = ({ name, accessory, component }) => {
+  const GarageController = {
     component: new five.Relay(component),
+    name: name || 'Garage Door',
+    pincode: accessory.pincode || '031-45-154',
+    username: accessory.username || 'C1:5D:3F:EE:5E:FA',
+    manufacturer: accessory.manufacturer || null,
+    model: accessory.model || null,
+    serialNumber: accessory.serialNumber || null,
+
     opened: false,
     open: function() {
       console.log("Opening the Garage!");
-      GARAGE.component.on();
-      GARAGE.opened = true;
+      GarageController.component.on();
+      GarageController.opened = true;
     },
     close: function() {
       console.log("Closing the Garage!");
-      GARAGE.component.off();
-      GARAGE.opened = false;
+      GarageController.component.off();
+      GarageController.opened = false;
     },
     identify: function() {
       console.log("Identify the Garage");
     },
     status: function(){
       console.log("Sensor queried!");
-      GARAGE.opened = GARAGE.component.isOn;
+      GarageController.opened = GarageController.component.isOn;
     }
   };
 
-  // Assign properties
-  Object.keys(accessory).forEach((prop) => {
-    GARAGE[prop] = accessory[prop]
-  });
-
-
   // Create new Accessory
   var garageUUID = uuid.generate('hap-nodejs:accessories:'+'GarageDoor');
-  var garage = new Accessory('Garage Door', garageUUID);
+  var garage = new Accessory(GarageController.name, garageUUID);
 
   // Set accessory publishing propst
-  garage.username = GARAGE.username || "C1:5D:3F:EE:5E:FA";
-  garage.pincode = GARAGE.pincode || "031-45-154";
+  garage.username = GarageController.username;
+  garage.pincode = GarageController.pincode;
 
   garage
     .getService(Service.AccessoryInformation)
-    .setCharacteristic(Characteristic.Manufacturer, GARAGE.manufacturer || "Liftmaster")
-    .setCharacteristic(Characteristic.Model, GARAGE.model || "Rev-1")
-    .setCharacteristic(Characteristic.SerialNumber, GARAGE.serialNumber || "TW000165");
+    .setCharacteristic(Characteristic.Manufacturer, GarageController.manufacturer)
+    .setCharacteristic(Characteristic.Model, GarageController.model)
+    .setCharacteristic(Characteristic.SerialNumber, GarageController.serialNumber);
 
   garage.on('identify', function(paired, callback) {
-    GARAGE.identify();
+    GarageController.identify();
     callback();
   });
 
@@ -69,14 +70,14 @@ module.exports = ({ accessory, component }) => {
     .on('set', function(value, callback) {
 
       if (value == Characteristic.TargetDoorState.CLOSED) {
-        GARAGE.close();
+        GarageController.close();
         callback();
         garage
           .getService(Service.GarageDoorOpener)
           .setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSED);
       }
       else if (value == Characteristic.TargetDoorState.OPEN) {
-        GARAGE.open();
+        GarageController.open();
         callback();
         garage
           .getService(Service.GarageDoorOpener)
@@ -90,9 +91,9 @@ module.exports = ({ accessory, component }) => {
     .on('get', function(callback) {
 
       var err = null;
-      GARAGE.status();
+      GarageController.status();
 
-      if (GARAGE.opened) {
+      if (GarageController.opened) {
         console.log("Query: Is Garage Open? Yes.");
         callback(err, Characteristic.CurrentDoorState.OPEN);
       }
