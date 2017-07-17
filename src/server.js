@@ -106,7 +106,7 @@ Server.prototype.createBridge = function() {
 Server.prototype.createBoard = function() {
   log('yellow', 'WAITING FOR BOARD...');
 
-  return new five.Board();
+  return new five.Board(config.board);
 }
 
 Server.prototype.handleBoardReady = function() {
