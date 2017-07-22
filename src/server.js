@@ -14,10 +14,8 @@ const mongo = require('mongodb');
 // const io = require('socket.io')(http);
 const five = require('johnny-five');
 const hap = require('hap-nodejs');
-const path = require('path');
 const fs = require('fs');
 const storage = require('node-persist');
-const config = require('../config.json');
 const loadAccessories = require('./accessories/loadAccessories');
 const log = require('./utils/logger');
 const localAddress = require('./utils/address');
@@ -58,38 +56,50 @@ Server.prototype.run = function () {
 }
 
 Server.prototype.publishBridge = function() {
-  const config = this.config.bridge || {};
+  const { bridge } = this.config;
   const that = this;
 
   this.bridge.on('listening', function(port) {
     log('cyan', `HAP running on port ${port}.`);
 
-    that.printPin(config.pin);
+    that.printPin(bridge.pin);
   });
 
   this.bridge.publish({
-    username: config.username || "CC:22:3D:E3:CE:30",
-    port: config.port || 0,
-    pincode: config.pin || "031-45-154",
+    username: bridge.username,
+    port: bridge.port,
+    pincode: bridge.pin,
     category: Accessory.Categories.BRIDGE
   });
 }
 
-Server.prototype.loadConfig = () => {
+Server.prototype.loadConfig = function() {
   let config = {};
   const configFile = Path.configFile();
 
   if (!fs.existsSync(configFile)) {
+    log('cyan', 'Config file not found: config.json');
+
+    // Service
+    config.ipaddr = '0.0.0.0';
+    config.port = '8080';
+    config.mongo = 'mongodb://localhost:27017/homePi';
+
+    // HAP
     config.bridge = {
       name: 'HomePi',
       username: 'CC:22:3D:E3:CE:30',
-      pin: '031-45-154'
+      pin: '031-45-154',
+      port: 51826,
     };
+
+    // Board
+    config.board = {};
   } else {
     try {
       config = JSON.parse(fs.readFileSync(configFile));
     } catch (err) {
-      // TODO: log err
+      log('cyan', 'Error loading config file, please check file format.');
       throw err;
     }
   }
@@ -98,15 +108,15 @@ Server.prototype.loadConfig = () => {
 }
 
 Server.prototype.createBridge = function() {
-  const config = this.config.bridge || {};
+  const { bridge } = this.config;
 
-  return new Bridge(config.name || 'HomePi', uuid.generate("HomePi"));
+  return new Bridge(bridge.name, uuid.generate("HomePi"));
 }
 
 Server.prototype.createBoard = function() {
   log('yellow', 'WAITING FOR BOARD...');
 
-  return new five.Board(config.board);
+  return new five.Board(this.config.board);
 }
 
 Server.prototype.handleBoardReady = function() {
@@ -130,7 +140,7 @@ Server.prototype.loadAccessories = function() {
 }
 
 Server.prototype.connectDB = function(callback) {
-  mongo.MongoClient.connect(config.mongo, (err, db) => {
+  mongo.MongoClient.connect(this.config.mongo, (err, db) => {
     if (err) throw new Error(err);
     log('cyan', 'Database connection established');
 
@@ -140,10 +150,10 @@ Server.prototype.connectDB = function(callback) {
   })
 };
 
-Server.prototype.configServer = () => {
+Server.prototype.configServer = function () {
   app.set('json spaces', 4);
-  app.set('ipaddr', config.ipaddr);
-  app.set('port', config.port);
+  app.set('ipaddr', this.config.ipaddr);
+  app.set('port', this.config.port);
   // app.set('sockets', io.sockets);
   app.use(morgan(nodeEnv !== 'development' ? 'common' : 'dev'));
   app.use(bodyParser.json());
@@ -153,8 +163,9 @@ Server.prototype.configServer = () => {
 }
 
 Server.prototype.startServer = function () {
-  http.listen(config.port, config.ipaddr, () => {
-    log('cyan', `HTTP running on ${localAddress}:${config.port}`);
+  let { port, ipaddr } = this.config;
+  http.listen(port, ipaddr, () => {
+    log('cyan', `HTTP running on ${localAddress}:${port}`);
   });
 
   routes(app, this.db, five);

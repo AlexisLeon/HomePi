@@ -20,7 +20,7 @@ const Path = {
     return path.join(home, '.homepi');
   },
 
-  configFile: () => path.join(Path.storagePath(), 'config.json'),
+  configFile: () => path.join(__dirname, '..', 'config.json'),
 
   persistPath: () => path.join(Path.storagePath(), 'persist'),
 
