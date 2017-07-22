@@ -102,6 +102,7 @@ module.exports = ({ name, accessory, component }) => {
   // We can see the complete list of Services and Characteristics in `lib/gen/HomeKitTypes.js`
   lightAccessory
     .addService(Service.Lightbulb, LightController.name) // services exposed to the user should have "names" like "Light" for this case
+    .setCharacteristic(Characteristic.On, LightController.getPower())
     .getCharacteristic(Characteristic.On)
     .on('set', function(value, callback) {
       LightController.setPower(value);
