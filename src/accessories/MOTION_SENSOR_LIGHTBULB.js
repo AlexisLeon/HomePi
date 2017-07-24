@@ -6,7 +6,7 @@ const {
 } = require('hap-nodejs');
 const five = require('johnny-five');
 
-module.exports = ({ name, accessory, component }, board) => {
+module.exports = ({ name, accessory, component, board }) => {
   component.sensor.board = board;
   component.actuator.board = board;
 

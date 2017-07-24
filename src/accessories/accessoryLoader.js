@@ -19,7 +19,9 @@ module.exports = (accessories, board) => {
 
   accessories.forEach((accessory) => {
     debug('Parsing accessory: %s', accessory.accessory.category);
-    const loadedAccessory = require(path.join(__dirname, accessory.accessory.category))(accessory, board);
+    accessory.board = board;
+
+    const loadedAccessory = require(path.join(__dirname, accessory.accessory.category))(accessory);
     loadedAccessories.push(loadedAccessory);
   });
 

@@ -18,7 +18,7 @@ const firmata = require('firmata');
 const hap = require('hap-nodejs');
 const fs = require('fs');
 const storage = require('node-persist');
-const loadAccessories = require('./accessories/loadAccessories');
+const AccessoryLoader = require('./accessories/accessoryLoader');
 const log = require('./utils/logger');
 const localAddress = require('./utils/address');
 const routes = require('./routes');
@@ -29,8 +29,7 @@ const nodeEnv = process.env.NODE_ENV ? process.env.NODE_ENV : 'development';
 const {
   uuid,
   Bridge,
-  Accessory,
-  AccessoryLoader
+  Accessory
 } = hap;
 
 function Server() {
@@ -169,7 +168,7 @@ Server.prototype.loadAccessories = function(boardId, board) {
       if (queryErr) throw new Error(queryErr);
       log('yellow', 'LOADING DEVICES');
 
-      const accessories = loadAccessories(results, board);
+      const accessories = AccessoryLoader(results, board);
       accessories.forEach((accessory) => {
         this.bridge.addBridgedAccessory(accessory);
       });
