@@ -14,7 +14,9 @@
 } = require('hap-nodejs');
 const five = require('johnny-five');
 
-module.exports = ({ name, accessory, component }) => {
+module.exports = ({ name, accessory, component }, board) => {
+  component.board = board;
+
   const LightController = {
     component: new five.Relay(component),
     name: name || "Simple Light",

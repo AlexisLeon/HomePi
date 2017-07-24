@@ -6,7 +6,9 @@ const {
 } = require('hap-nodejs');
 const five = require('johnny-five');
 
-module.exports = ({ name, accessory, component }) => {
+module.exports = ({ name, accessory, component }, board) => {
+  component.board = board;
+
   const MotionSensorController = {
     component: new five.Motion(component),
     name: name || 'Motion Sensor',

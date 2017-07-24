@@ -13,6 +13,8 @@ const bodyParser = require('body-parser');
 const mongo = require('mongodb');
 // const io = require('socket.io')(http);
 const five = require('johnny-five');
+const VirtualSerialPort = require('udp-serial').SerialPort;
+const firmata = require('firmata');
 const hap = require('hap-nodejs');
 const fs = require('fs');
 const storage = require('node-persist');
@@ -44,10 +46,15 @@ Server.prototype.run = function () {
   const that = this;
 
   this.connectDB(function() {
-    that.board = that.createBoard();
-    that.board.on('ready', function() {
-      that.loadAccessories() // handleBoardReady
-    })
+    that.createBoards(() => {
+      that.boards.on('ready', function() {
+        log('yellow', 'BOARDS READY');
+
+        this.each(function(board) {
+          that.loadAccessories(board.id, board)
+        });
+      })
+    });
 
     that.configServer();
     that.startServer();
@@ -113,26 +120,56 @@ Server.prototype.createBridge = function() {
   return new Bridge(bridge.name, uuid.generate("HomePi"));
 }
 
-Server.prototype.createBoard = function() {
-  log('yellow', 'WAITING FOR BOARD...');
+Server.prototype.createBoards = function(callback) {
+  log('yellow', 'LOADING BOARDS...');
 
-  return new five.Board(this.config.board);
-}
-
-Server.prototype.handleBoardReady = function() {
-  log('yellow', 'BOARD READY');
-  this.boardReady = true;
-  this.loadAccessories();
-}
-
-Server.prototype.loadAccessories = function() {
-  this.db.collection('accessories')
+  this.db.collection('boards')
     .find({})
+    .toArray((queryErr, results) => {
+      if (queryErr) throw new Error(queryErr);
+
+      const boards = [];
+
+      results.forEach((board) => {
+        const { host, type, port } = board;
+        // Global Settings
+        board.repl = false;
+
+        switch (type) {
+          case 'ESP8266':
+          case 'WIFI':
+            var sp = new VirtualSerialPort({
+              host,
+              type: 'udp4',
+              port: 41234,
+            });
+
+            board.io = new firmata.Board(sp);
+            board.io.once('ready', function() {
+              board.io.isReady = true;
+            });
+
+            boards.push(board);
+            break;
+          default:
+            // ...
+        }
+      });
+
+      this.boards = new five.Boards(boards);
+
+      callback();
+    });
+}
+
+Server.prototype.loadAccessories = function(boardId, board) {
+  this.db.collection('accessories')
+    .find({"board": boardId})
     .toArray((queryErr, results) => {
       if (queryErr) throw new Error(queryErr);
       log('yellow', 'LOADING DEVICES');
 
-      const accessories = loadAccessories(results);
+      const accessories = loadAccessories(results, board);
       accessories.forEach((accessory) => {
         this.bridge.addBridgedAccessory(accessory);
       });

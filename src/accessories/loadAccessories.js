@@ -14,12 +14,12 @@ const { AccessoryLoader, Accessory } = require('hap-nodejs');
 
 const debug = (data, params) => console.log(data, params)
 
-module.exports = (accessories) => {
+module.exports = (accessories, board) => {
   const loadedAccessories = [];
 
   accessories.forEach((accessory) => {
     debug('Parsing accessory: %s', accessory.accessory.category);
-    const loadedAccessory = require(path.join(__dirname, accessory.accessory.category))(accessory);
+    const loadedAccessory = require(path.join(__dirname, accessory.accessory.category))(accessory, board);
     loadedAccessories.push(loadedAccessory);
   });
 

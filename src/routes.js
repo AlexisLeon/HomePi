@@ -36,8 +36,9 @@ module.exports = (app, db, five) => {
 
   // Create new Accessory
   app.post('/accessories', async (req, res) => {
-    const { name, type, category } = req.body;
+    const { board, name, type, category } = req.body;
     const newAccessory = { // Required props
+      board,
       name,
       component: { // Johnny-Five
         type,
@@ -48,6 +49,7 @@ module.exports = (app, db, five) => {
     };
 
     // TODO: validate accessory props, eg. missing params
+    // TODO: ref accessory._id to board.accessories
 
     // Create Document Object
     Object.keys(req.body).map((prop) => {
@@ -91,6 +93,74 @@ module.exports = (app, db, five) => {
           'cyan', 'REMOVED DEVICE',
           'magenta', req.body.params.accessory_id
         );
+        return res.json(result);
+      });
+  });
+
+  /*
+   * Boards
+   */
+
+  // Get all boards
+  app.get('/boards', (req, res) => {
+    db.collection('boards')
+      .find({})
+      .toArray((queryErr, result) => {
+        if (queryErr) return res.send(queryErr);
+
+        return res.json(result);
+      });
+  });
+
+  // Create new Board
+  app.post('/boards', async (req, res) => {
+    const { id, host, type, port } = req.body;
+    const newBoard = { // Required props
+      id,
+      host,
+      type,
+      port,
+      accessories: [],
+    };
+
+    // TODO: ref board.accessories to accessory._id
+
+    // Insert document
+    db.collection('boards')
+      .insertOne(newBoard, (insertErr) => {
+        if (insertErr) return res.send(insertErr);
+
+        log(
+          'cyan', 'CREATED NEW BOARD',
+          'magenta', host || port,
+        );
+
+        return res.json(newBoard);
+      });
+  });
+
+  // Get single board
+  app.get('/boards/:board_id', (req, res) => {
+    db.collection('boards').findOne(ObjectID(req.params.board_id),
+      (queryErr, result) => {
+        if (queryErr) return res.send(queryErr);
+
+        return res.json(result);
+      },
+    );
+  });
+
+  // Delete board
+  app.delete('/boards/:board_id', (req, res) => {
+    db.collection('boards')
+      .remove(ObjectID(req.params.board_id), (deleteErr, result) => {
+        if (deleteErr) return res.send(deleteErr);
+
+        log(
+          'cyan', 'REMOVED BOARD',
+          'magenta', req.body.params.board_id
+        );
+
         return res.json(result);
       });
   });
