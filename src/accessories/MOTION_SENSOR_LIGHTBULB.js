@@ -20,7 +20,6 @@ module.exports = ({ name, accessory, component, board }) => {
     model: accessory.model || null,
     serialNumber: accessory.serialNumber || null,
 
-    delay: component.actuator.delay || 5000,
     motionDetected: false,
     status: function() {
       MotionSensorController.motionDetected = MotionSensorController.sensor.detectedMotion;
@@ -72,13 +71,11 @@ module.exports = ({ name, accessory, component, board }) => {
   // Handle motion sensor state
   MotionSensorController.sensor
     .on('motionend', function() {
-      setTimeout(() => { // Delay actuator
-        MotionSensorController.actuator.off()
+      MotionSensorController.actuator.off()
 
-        motionSensor
-          .getService(Service.MotionSensor)
-          .setCharacteristic(Characteristic.MotionDetected, MotionSensorController.status());
-      }, MotionSensorController.delay);
+      motionSensor
+        .getService(Service.MotionSensor)
+        .setCharacteristic(Characteristic.MotionDetected, MotionSensorController.status());
     });
 
   return motionSensor;
