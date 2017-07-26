@@ -1,6 +1,6 @@
 {
   "name": "HomePi",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Home Automation with Raspberry Pi and Node Js",
   "main": "index.js",
   "scripts": {
