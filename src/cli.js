@@ -6,9 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+const program = require('commander');
+const version = require('./utils/version');
 const Server = require('./server');
 
 module.exports = () => {
+  program
+    .version(version)
+    .parse(process.argv);
+
   const server = new Server();
 
   server.run();
