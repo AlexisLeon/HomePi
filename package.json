@@ -1,14 +1,17 @@
 {
   "name": "HomePi",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Home Automation with Raspberry Pi and Node Js",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=production node homePi.js --harmony",
-    "dev": "NODE_ENV=development nodemon homePi.js -- --harmony",
-    "lint": "eslint homePi.js",
+    "start": "bin/homepi",
+    "dev": "NODE_ENV=development nodemon bin/homepi -- --harmony",
     "test": "jest"
   },
+  "bin": {
+    "homepi": "bin/homepi"
+  },
+  "preferGlobal": true,
   "repository": {
     "type": "git",
     "url": "git://github.com/AlexisLeon/HomePi.git"
@@ -25,24 +28,22 @@
   "dependencies": {
     "body-parser": "^1.17.2",
     "chalk": "^1.1.3",
+    "commander": "^2.11.0",
     "config": "^1.26.1",
-    "duino": "^0.0.9",
     "express": "^4.15.3",
+    "firmata": "^0.17.0",
+    "hap-nodejs": "^0.4.27",
     "johnny-five": "^0.11.1",
     "mongodb": "^2.2.28",
     "morgan": "^1.8.2",
-    "pi-gpio": "^0.0.8",
-    "socket.io": "^2.0.3"
+    "node-persist": "^0.0.11",
+    "socket.io": "^2.0.3",
+    "udp-serial": "^0.2.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-preset-es2015": "^6.24.1",
-    "eslint": "^3.19.0",
-    "eslint-config-airbnb": "^15.0.1",
-    "eslint-config-airbnb-base": "^11.2.0",
-    "eslint-plugin-import": "^2.3.0",
-    "eslint-plugin-jsx-a11y": "^5.0.3",
-    "eslint-plugin-react": "^7.1.0",
+    "eslint": "^4.3.0",
+    "eslint-config-airbnb-base": "^11.3.1",
+    "eslint-plugin-import": "^2.7.0",
     "jest": "^20.0.4"
   }
 }

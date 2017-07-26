@@ -1,41 +1,116 @@
-# Home Pi App
+# Home Pi
 
-This is the entire source code of [Home Pi](https://github.com/AlexisLeon/HomePi)
+Home Automation with Raspberry Pi and Node Js
 
-## Requirements
+See [platform support](http://johnny-five.io/platform-support/)
 
-1. [Node JS](https://nodejs.org)
-2. [MongoDB](https://www.mongodb.org/downloads)
+## Getting Started
 
-## Setup
+```bash
+$ git clone https://github.com/AlexisLeon/HomePi.git
+$ cd HomePi
+$ yarn install
+$ yarn start
+```
 
-1. **Clone the repo**
+### Prerequisites
 
+**Required packages for Debian based systems**
+
+```
+sudo apt-get install libavahi-compat-libdnssd-dev
+```
+
+**[Node JS](https://nodejs.org)**
+
+  ```bash
+  curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+  sudo apt-get update && sudo apt-get install nodejs
   ```
-  $ git clone https://github.com/AlexisLeon/HomePi.git
-  $ cd HomePi
+
+**[MongoDB](https://www.mongodb.org/downloads)**
+
+  ```bash
+  sudo apt-get install mongodb
+  sudo systemctl start mongodb
   ```
 
-2. **Install dependencies**:
+**[Yarn](https://yarnpkg.com)**
 
-  ```
-  $ yarn install
-  ```
-
-3. **Start Server:**
-
-  ```
-  $ yarn start
+  ```bash
+  curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+  echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+  sudo apt-get update && sudo apt-get install yarn
   ```
 
-  Open [http://localhost:3000](http://localhost:3000)
+### Installing
 
-## Testing
+**Clone project and install modules**
+```bash
+git clone https://github.com/AlexisLeon/HomePi.git
+cd HomePi
+yarn install
+```
 
-**Run tests:**
+**To use as binary `homepi` do follows:**
+
+```
+npm link
+```
+
+If you get error `Error: EACCES: permission denied, symlink '/home/pi/HomePi' -> /usr/lib/node_modules/HomePi'` try:
+
+```bash
+sudo chmod 777 -R /usr/lib/node_modules/HomePi
+sudo chmod 777 -R /usr/bin/
+
+# Run link
+npm link
+```
+
+**Connect your board and start the server**
+
+```
+$ homepi
+Database connection established
+WAITING FOR BOARD...
+HAP running on port 59813.
+Scan this code to pair with HomePi:
+
+    ┌────────────┐    
+    │ 031-45-154 │    
+    └────────────┘    
+
+HTTP running on 192.168.1.64:8080
+1500142425846 Board Looking for connected device
+...
+```
+
+**Open** [http://localhost:8080](http://localhost:8080)
+
+## Running the tests
+
 ```
 yarn test
 ```
 
+## Built With
 
-_Created by [Alexis Leon](https://github.com/AlexisLeon)_
+* [Johnny-Five](http://johnny-five.io) - Microcontrollers
+* [Socket.io](http://socket.io) - WebSocket server
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+
+## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/AlexisLeon/HomePi/tags).
+
+## Authors
+
+* **[Alexis Leon](https://github.com/AlexisLeon)**
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
