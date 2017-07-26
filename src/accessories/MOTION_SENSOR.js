@@ -17,19 +17,19 @@ module.exports = ({ name, accessory, component }) => {
     serialNumber: accessory.serialNumber || null,
 
     motionDetected: false,
-    status: function() {
+    status() {
       MotionSensorController.motionDetected = MotionSensorController.component.detectedMotion;
       console.log('MOTION STATUS IS ', MotionSensorController.component.detectedMotion);
       return this.motionDetected;
     },
-    identify: function() {
+    identify() {
       console.log('Identify the motion sensor!');
-    }
-  }
+    },
+  };
 
   // Create new Accessory
-  var motionSensorUUID = uuid.generate('hap-nodejs:accessories:motionsensor');
-  var motionSensor = new Accessory(MotionSensorController.name, motionSensorUUID);
+  const motionSensorUUID = uuid.generate('hap-nodejs:accessories:motionsensor');
+  const motionSensor = new Accessory(MotionSensorController.name, motionSensorUUID);
 
   // Set accessory publishing props
   motionSensor.username = MotionSensorController.username;
@@ -41,7 +41,7 @@ module.exports = ({ name, accessory, component }) => {
     .setCharacteristic(Characteristic.Model, MotionSensorController.model)
     .setCharacteristic(Characteristic.SerialNumber, MotionSensorController.serialNumber);
 
-  motionSensor.on('identify', function(paired, callback) {
+  motionSensor.on('identify', (paired, callback) => {
     MotionSensorController.identify();
     callback();
   });
@@ -50,13 +50,11 @@ module.exports = ({ name, accessory, component }) => {
     .addService(Service.MotionSensor, MotionSensorController.name)
     .setCharacteristic(Characteristic.MotionDetected, MotionSensorController.motionDetected)
     .getCharacteristic(Characteristic.MotionDetected)
-    .on('get', function(callback) {
-       callback(null, MotionSensorController.status());
-  });
+    .on('get', callback => callback(null, MotionSensorController.status()));
 
   // Handle motion sensor state
   MotionSensorController.component
-    .on('motionstart', function() {
+    .on('motionstart', () => {
       motionSensor
         .getService(Service.MotionSensor)
         .setCharacteristic(Characteristic.MotionDetected, MotionSensorController.status());
@@ -64,7 +62,7 @@ module.exports = ({ name, accessory, component }) => {
 
   // Handle motion sensor state
   MotionSensorController.component
-    .on('motionend', function() {
+    .on('motionend', () => {
       motionSensor
         .getService(Service.MotionSensor)
         .setCharacteristic(Characteristic.MotionDetected, MotionSensorController.status());

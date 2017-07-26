@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const { AccessoryLoader, Accessory } = require('hap-nodejs');
 
-const debug = (data, params) => console.log(data, params)
+const debug = (data, params) => console.log(data, params);
 
 module.exports = (accessories, board) => {
   const loadedAccessories = [];
@@ -28,10 +28,12 @@ module.exports = (accessories, board) => {
   return loadedAccessories.map((accessory) => {
     // check if accessory is not empty
     if (accessory === null || accessory === undefined) {
-      console.log("Invalid accessory!");
+      console.log('Invalid accessory!');
       return false;
+    } else if (accessory instanceof Accessory) {
+      return accessory;
     } else {
-      return (accessory instanceof Accessory) ? accessory : AccessoryLoader.parseAccessoryJSON(accessory);
+      return AccessoryLoader.parseAccessoryJSON(accessory);
     }
-  }).filter((accessory) => (accessory ? true : false));
-}
+  }).filter(accessory => !!accessory);
+};

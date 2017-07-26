@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
- const {
+const {
   Accessory,
   Service,
   Characteristic,
@@ -17,70 +17,67 @@ const five = require('johnny-five');
 module.exports = ({ name, accessory, component }) => {
   const LightController = {
     component: new five.Relay(component),
-    name: name || "Simple Light",
-    pincode: accessory.pincode || "031-45-154",
-    username: accessory.username || "FA:3C:ED:5A:1A:1A",
+    name: name || 'Simple Light',
+    pincode: accessory.pincode || '031-45-154',
+    username: accessory.username || 'FA:3C:ED:5A:1A:1A',
     manufacturer: accessory.manufacturer || null,
     model: accessory.model || null,
     serialNumber: accessory.serialNumber || null,
 
-    power: false, //curent power status
-    brightness: 100, //current brightness
-    hue: 0, //current hue
-    saturation: 0, //current saturation
-    outputLogs: false, //output logs
+    power: false, // current power status
+    brightness: 100, // current brightness
+    hue: 0, // current hue
+    saturation: 0, // current saturation
+    outputLogs: false, // output logs
 
-    setPower: function(status) { //set power of accessory
-      if(this.outputLogs) console.log("Turning the '%s' %s", this.name, status ? "on" : "off");
-      status ? LightController.component.on() : LightController.component.off();
+    setPower(status) { // set power of accessory
+      if (this.outputLogs) console.log('Turning the "%s" %s', this.name, status ? 'on' : 'off');
+
+      if (status) {
+        LightController.component.on();
+      } else {
+        LightController.component.off();
+      }
 
       this.power = status;
     },
-
-    getPower: function() { //get power of accessory
-      if(this.outputLogs) console.log("'%s' is %s.", this.name, this.power ? "on" : "off");
+    status() { // get power of accessory
+      if (this.outputLogs) console.log('"%s" is %s.', this.name, this.power ? 'on' : 'off');
       LightController.power = LightController.component.isOn;
       return this.power;
     },
-
-    setBrightness: function(brightness) { //set brightness
-      if(this.outputLogs) console.log("Setting '%s' brightness to %s", this.name, brightness);
+    setBrightness(brightness) { // set brightness
+      if (this.outputLogs) console.log('Setting "%s" brightness to %s', this.name, brightness);
       this.brightness = brightness;
     },
-
-    getBrightness: function() { //get brightness
-      if(this.outputLogs) console.log("'%s' brightness is %s", this.name, this.brightness);
+    getBrightness() { // get brightness
+      if (this.outputLogs) console.log('"%s" brightness is %s', this.name, this.brightness);
       return this.brightness;
     },
-
-    setSaturation: function(saturation) { //set saturation
-      if(this.outputLogs) console.log("Setting '%s' saturation to %s", this.name, saturation);
+    setSaturation(saturation) { // set saturation
+      if (this.outputLogs) console.log('Setting "%s" saturation to %s', this.name, saturation);
       this.saturation = saturation;
     },
-
-    getSaturation: function() { //get saturation
-      if(this.outputLogs) console.log("'%s' saturation is %s", this.name, this.saturation);
+    getSaturation() { // get saturation
+      if (this.outputLogs) console.log('"%s" saturation is %s', this.name, this.saturation);
       return this.saturation;
     },
-
-    setHue: function(hue) { //set Hue
-      if(this.outputLogs) console.log("Setting '%s' hue to %s", this.name, hue);
+    setHue(hue) { // set Hue
+      if (this.outputLogs) console.log('Setting "%s" hue to %s', this.name, hue);
       this.hue = hue;
     },
-
-    getHue: function() { //get hue
-      if(this.outputLogs) console.log("'%s' hue is %s", this.name, this.hue);
+    getHue() { // get hue
+      if (this.outputLogs) console.log('"%s" hue is %s', this.name, this.hue);
       return this.hue;
     },
-
-    identify: function() { //identify the accessory
-      if(this.outputLogs) console.log("Identify the '%s'", this.name);
-    }
-  }
+    identify() { // identify the accessory
+      if (this.outputLogs) console.log('Identify the "%s"', this.name);
+    },
+  };
 
   // Create new Accessory
-  var lightUUID = uuid.generate('hap-nodejs:accessories:light' + LightController.name);
-  var lightAccessory = new Accessory(LightController.name, lightUUID);
+  const lightUUID = uuid.generate(`hap-nodejs:accessories:light${LightController.name}`);
+  const lightAccessory = new Accessory(LightController.name, lightUUID);
 
   // Set accessory publishing props
   lightAccessory.username = LightController.username;
@@ -88,47 +85,37 @@ module.exports = ({ name, accessory, component }) => {
 
   lightAccessory
     .getService(Service.AccessoryInformation)
-      .setCharacteristic(Characteristic.Manufacturer, LightController.manufacturer)
-      .setCharacteristic(Characteristic.Model, LightController.model)
-      .setCharacteristic(Characteristic.SerialNumber, LightController.serialNumber);
+    .setCharacteristic(Characteristic.Manufacturer, LightController.manufacturer)
+    .setCharacteristic(Characteristic.Model, LightController.model)
+    .setCharacteristic(Characteristic.SerialNumber, LightController.serialNumber);
 
-  // listen for the "identify" event for this Accessory
-  lightAccessory.on('identify', function(paired, callback) {
+  // listen for the 'identify' event for this Accessory
+  lightAccessory.on('identify', (paired, callback) => {
     LightController.identify();
     callback();
   });
 
-  // Add the actual Lightbulb Service and listen for change events from iOS.
-  // We can see the complete list of Services and Characteristics in `lib/gen/HomeKitTypes.js`
   lightAccessory
-    .addService(Service.Lightbulb, LightController.name) // services exposed to the user should have "names" like "Light" for this case
-    .setCharacteristic(Characteristic.On, LightController.getPower())
+    .addService(Service.Lightbulb, LightController.name)
+    .setCharacteristic(Characteristic.On, LightController.status())
     .getCharacteristic(Characteristic.On)
-    .on('set', function(value, callback) {
+    .on('set', (value, callback) => {
       LightController.setPower(value);
 
-      // Our light is synchronous - this value has been successfully set
-      // Invoke the callback when you finished processing the request
-      // If it's going to take more than 1s to finish the request, try to invoke the callback
-      // after getting the request instead of after finishing it. This avoids blocking other
-      // requests from HomeKit.
       callback();
     })
-    // We want to intercept requests for our current power state so we can query the hardware itself instead of
-    // allowing HAP-NodeJS to return the cached Characteristic.value.
-    .on('get', function(callback) {
-      callback(null, LightController.getPower());
+    .on('get', (callback) => {
+      callback(null, LightController.status());
     });
 
-  // To inform HomeKit about changes occurred outside of HomeKit (like user physically turn on the light)
-  // Please use Characteristic.updateValue
+  // Inform HomeKit about external changes.
   //
   // lightAccessory
   //   .getService(Service.Lightbulb)
   //   .getCharacteristic(Characteristic.On)
   //   .updateValue(true);
 
-  // // also add an "optional" Characteristic for Brightness
+  // Brightness Characteristic
   // lightAccessory
   //   .getService(Service.Lightbulb)
   //   .addCharacteristic(Characteristic.Brightness)
@@ -140,7 +127,7 @@ module.exports = ({ name, accessory, component }) => {
   //     callback(null, LightController.getBrightness());
   //   });
 
-  // // also add an "optional" Characteristic for Saturation
+  // Saturation Characteristic
   // lightAccessory
   //   .getService(Service.Lightbulb)
   //   .addCharacteristic(Characteristic.Saturation)
@@ -152,7 +139,7 @@ module.exports = ({ name, accessory, component }) => {
   //     callback(null, LightController.getSaturation());
   //   });
 
-  // // also add an "optional" Characteristic for Hue
+  // Hue Characteristic
   // lightAccessory
   //   .getService(Service.Lightbulb)
   //   .addCharacteristic(Characteristic.Hue)

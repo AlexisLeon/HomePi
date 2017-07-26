@@ -7,7 +7,7 @@
  */
 
 // HomeKit Types UUID's
-const st = id => `000000${id}-0000-1000-8000-0026BB765291`
+const st = id => `000000${id}-0000-1000-8000-0026BB765291`;
 
 // HomeKitTransportCategoryTypes
 export const OTHER_TCTYPE = 1;

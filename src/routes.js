@@ -8,13 +8,12 @@
 
 const mongo = require('mongodb');
 const path = require('path');
-// const initializeAccessory = require('./plugins/initializeAccessory');
 const log = require('./utils/logger');
 
 /* Helpers */
 const ObjectID = id => new mongo.ObjectID(id);
 
-module.exports = (app, db, five) => {
+module.exports = (app, db) => {
   app.get('/', (req, res) => {
     res.json({ status: 'running' });
   });
@@ -45,15 +44,15 @@ module.exports = (app, db, five) => {
       },
       accessory: { // HAP
         category,
-      }
+      },
     };
 
     // TODO: validate accessory props, eg. missing params
     // TODO: ref accessory._id to board.accessories
 
     // Create Document Object
-    Object.keys(req.body).map((prop) => {
-      newAccessory[prop] = req.body[prop]
+    Object.keys(req.body).forEach((prop) => {
+      newAccessory[prop] = req.body[prop];
     });
 
     // Insert document
@@ -64,7 +63,7 @@ module.exports = (app, db, five) => {
         log(
           'cyan', 'CREATED NEW DEVICE',
           'magenta', req.body.type,
-          'cyan', `"${req.body.name}"`
+          'cyan', `"${req.body.name}"`,
         );
 
         // initializeAccessory(five, io.sockets, newAccessory);
@@ -91,7 +90,7 @@ module.exports = (app, db, five) => {
 
         log(
           'cyan', 'REMOVED DEVICE',
-          'magenta', req.body.params.accessory_id
+          'magenta', req.body.params.accessory_id,
         );
         return res.json(result);
       });
@@ -141,7 +140,8 @@ module.exports = (app, db, five) => {
 
   // Get single board
   app.get('/boards/:board_id', (req, res) => {
-    db.collection('boards').findOne(ObjectID(req.params.board_id),
+    db.collection('boards').findOne(
+      ObjectID(req.params.board_id),
       (queryErr, result) => {
         if (queryErr) return res.send(queryErr);
 
@@ -158,10 +158,10 @@ module.exports = (app, db, five) => {
 
         log(
           'cyan', 'REMOVED BOARD',
-          'magenta', req.body.params.board_id
+          'magenta', req.body.params.board_id,
         );
 
         return res.json(result);
       });
   });
-}
+};

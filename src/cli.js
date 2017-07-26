@@ -12,4 +12,4 @@ module.exports = () => {
   const server = new Server();
 
   server.run();
-}
+};

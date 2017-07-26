@@ -7,12 +7,12 @@ const {
 const five = require('johnny-five');
 
 module.exports = ({ name, accessory, component, board }) => {
-  component.sensor.board = board;
-  component.actuator.board = board;
+  const sensor = { ...component.sensor, board };
+  const actuator = { ...component.sensor, board };
 
   const MotionSensorController = {
-    sensor: new five.Motion(component.sensor),
-    actuator: new five.Relay(component.actuator),
+    sensor: new five.Motion(sensor),
+    actuator: new five.Relay(actuator),
     name: name || 'Motion Sensor',
     username: accessory.username || '1A:2B:3D:4D:2E:AF',
     pincode: accessory.pincode || '031-45-154',
@@ -21,19 +21,19 @@ module.exports = ({ name, accessory, component, board }) => {
     serialNumber: accessory.serialNumber || null,
 
     motionDetected: false,
-    status: function() {
+    status() {
       MotionSensorController.motionDetected = MotionSensorController.sensor.detectedMotion;
       console.log('MOTION STATUS IS ', MotionSensorController.sensor.detectedMotion);
       return this.motionDetected;
     },
-    identify: function() {
+    identify() {
       console.log('Identify the motion sensor!');
-    }
-  }
+    },
+  };
 
   // Create new Accessory
-  var motionSensorUUID = uuid.generate('hap-nodejs:accessories:motionsensor');
-  var motionSensor = new Accessory(MotionSensorController.name, motionSensorUUID);
+  const motionSensorUUID = uuid.generate('hap-nodejs:accessories:motionsensor');
+  const motionSensor = new Accessory(MotionSensorController.name, motionSensorUUID);
 
   // Set accessory publishing props
   motionSensor.username = MotionSensorController.username;
@@ -45,7 +45,7 @@ module.exports = ({ name, accessory, component, board }) => {
     .setCharacteristic(Characteristic.Model, MotionSensorController.model)
     .setCharacteristic(Characteristic.SerialNumber, MotionSensorController.serialNumber);
 
-  motionSensor.on('identify', function(paired, callback) {
+  motionSensor.on('identify', (paired, callback) => {
     MotionSensorController.identify();
     callback();
   });
@@ -54,14 +54,12 @@ module.exports = ({ name, accessory, component, board }) => {
     .addService(Service.MotionSensor, MotionSensorController.name)
     .setCharacteristic(Characteristic.MotionDetected, MotionSensorController.motionDetected)
     .getCharacteristic(Characteristic.MotionDetected)
-    .on('get', function(callback) {
-       callback(null, MotionSensorController.status());
-  });
+    .on('get', callback => callback(null, MotionSensorController.status()));
 
   // Handle motion sensor state
   MotionSensorController.sensor
-    .on('motionstart', function() {
-      MotionSensorController.actuator.on()
+    .on('motionstart', () => {
+      MotionSensorController.actuator.on();
 
       motionSensor
         .getService(Service.MotionSensor)
@@ -70,8 +68,8 @@ module.exports = ({ name, accessory, component, board }) => {
 
   // Handle motion sensor state
   MotionSensorController.sensor
-    .on('motionend', function() {
-      MotionSensorController.actuator.off()
+    .on('motionend', () => {
+      MotionSensorController.actuator.off();
 
       motionSensor
         .getService(Service.MotionSensor)

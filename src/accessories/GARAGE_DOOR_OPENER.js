@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
- const {
+const {
   Accessory,
   Service,
   Characteristic,
@@ -25,30 +25,31 @@ module.exports = ({ name, accessory, component }) => {
     serialNumber: accessory.serialNumber || null,
 
     opened: false,
-    open: function() {
-      console.log("Opening the Garage!");
+    outputLogs: false, // output logs
+    open() {
+      if (this.outputLogs) console.log('Opening the Garage!');
       GarageController.component.on();
       GarageController.opened = true;
     },
-    close: function() {
-      console.log("Closing the Garage!");
+    close() {
+      if (this.outputLogs) console.log('Closing the Garage!');
       GarageController.component.off();
       GarageController.opened = false;
     },
-    identify: function() {
-      console.log("Identify the Garage");
+    identify() {
+      if (this.outputLogs) console.log('Identify the Garage');
     },
-    status: function(){
-      console.log("Sensor queried!");
+    status() {
+      if (this.outputLogs) console.log('Sensor queried!');
       GarageController.opened = GarageController.component.isOn;
-    }
+    },
   };
 
   // Create new Accessory
-  var garageUUID = uuid.generate('hap-nodejs:accessories:'+'GarageDoor');
-  var garage = new Accessory(GarageController.name, garageUUID);
+  const garageUUID = uuid.generate('hap-nodejs:accessories:GarageDoor');
+  const garage = new Accessory(GarageController.name, garageUUID);
 
-  // Set accessory publishing propst
+  // Set accessory publishing props
   garage.username = GarageController.username;
   garage.pincode = GarageController.pincode;
 
@@ -58,25 +59,26 @@ module.exports = ({ name, accessory, component }) => {
     .setCharacteristic(Characteristic.Model, GarageController.model)
     .setCharacteristic(Characteristic.SerialNumber, GarageController.serialNumber);
 
-  garage.on('identify', function(paired, callback) {
+  garage.on('identify', (paired, callback) => {
     GarageController.identify();
     callback();
   });
 
   garage
-    .addService(Service.GarageDoorOpener, "Garage Door")
-    .setCharacteristic(Characteristic.TargetDoorState, Characteristic.TargetDoorState.CLOSED) // force initial state to CLOSED
+    .addService(Service.GarageDoorOpener, GarageController.name)
+    .setCharacteristic(Characteristic.TargetDoorState, Characteristic.TargetDoorState.CLOSED)
     .getCharacteristic(Characteristic.TargetDoorState)
-    .on('set', function(value, callback) {
-
-      if (value == Characteristic.TargetDoorState.CLOSED) {
+    .on('set', (value, callback) => {
+      if (value === Characteristic.TargetDoorState.CLOSED) {
         GarageController.close();
         callback();
         garage
           .getService(Service.GarageDoorOpener)
-          .setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSED);
-      }
-      else if (value == Characteristic.TargetDoorState.OPEN) {
+          .setCharacteristic(
+            Characteristic.CurrentDoorState,
+            Characteristic.CurrentDoorState.CLOSED,
+          );
+      } else if (value === Characteristic.TargetDoorState.OPEN) {
         GarageController.open();
         callback();
         garage
@@ -88,17 +90,15 @@ module.exports = ({ name, accessory, component }) => {
   garage
     .getService(Service.GarageDoorOpener)
     .getCharacteristic(Characteristic.CurrentDoorState)
-    .on('get', function(callback) {
-
-      var err = null;
+    .on('get', (callback) => {
+      const err = null;
       GarageController.status();
 
       if (GarageController.opened) {
-        console.log("Query: Is Garage Open? Yes.");
+        if (this.outputLogs) console.log('Query: Is Garage Open? Yes.');
         callback(err, Characteristic.CurrentDoorState.OPEN);
-      }
-      else {
-        console.log("Query: Is Garage Open? No.");
+      } else {
+        if (this.outputLogs) console.log('Query: Is Garage Open? No.');
         callback(err, Characteristic.CurrentDoorState.CLOSED);
       }
     });

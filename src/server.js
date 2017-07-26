@@ -6,30 +6,32 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/* eslint-disable no-console */
+
 const app = require('express')();
-const morgan = require('morgan');
-const http = require('http').Server(app);
 const bodyParser = require('body-parser');
-const mongo = require('mongodb');
-// const io = require('socket.io')(http);
-const five = require('johnny-five');
-const VirtualSerialPort = require('udp-serial').SerialPort;
 const firmata = require('firmata');
-const hap = require('hap-nodejs');
+const five = require('johnny-five');
 const fs = require('fs');
+const hap = require('hap-nodejs');
+const http = require('http').Server(app);
+// const io = require('socket.io')(http);
+const mongo = require('mongodb');
+const morgan = require('morgan');
 const storage = require('node-persist');
+const VirtualSerialPort = require('udp-serial').SerialPort;
 const AccessoryLoader = require('./accessories/accessoryLoader');
 const log = require('./utils/logger');
 const localAddress = require('./utils/address');
-const routes = require('./routes');
 const Path = require('./path');
+const routes = require('./routes');
 
 /* Helpers */
 const nodeEnv = process.env.NODE_ENV ? process.env.NODE_ENV : 'development';
 const {
   uuid,
   Bridge,
-  Accessory
+  Accessory,
 } = hap;
 
 function Server() {
@@ -44,28 +46,26 @@ function Server() {
 Server.prototype.run = function () {
   const that = this;
 
-  this.connectDB(function() {
+  this.connectDB(() => {
     that.createBoards(() => {
-      that.boards.on('ready', function() {
+      that.boards.on('ready', () => {
         log('yellow', 'BOARDS READY');
 
-        this.each(function(board) {
-          that.loadAccessories(board.id, board)
-        });
-      })
+        this.each(board => that.loadAccessories(board.id, board));
+      });
     });
 
     that.configServer();
     that.startServer();
     that.publishBridge();
   });
-}
+};
 
-Server.prototype.publishBridge = function() {
+Server.prototype.publishBridge = function () {
   const { bridge } = this.config;
   const that = this;
 
-  this.bridge.on('listening', function(port) {
+  this.bridge.on('listening', (port) => {
     log('cyan', `HAP running on port ${port}.`);
 
     that.printPin(bridge.pin);
@@ -75,11 +75,11 @@ Server.prototype.publishBridge = function() {
     username: bridge.username,
     port: bridge.port,
     pincode: bridge.pin,
-    category: Accessory.Categories.BRIDGE
+    category: Accessory.Categories.BRIDGE,
   });
-}
+};
 
-Server.prototype.loadConfig = function() {
+Server.prototype.loadConfig = function () {
   let config = {};
   const configFile = Path.configFile();
 
@@ -111,15 +111,15 @@ Server.prototype.loadConfig = function() {
   }
 
   return config;
-}
+};
 
-Server.prototype.createBridge = function() {
+Server.prototype.createBridge = function () {
   const { bridge } = this.config;
 
-  return new Bridge(bridge.name, uuid.generate("HomePi"));
-}
+  return new Bridge(bridge.name, uuid.generate('HomePi'));
+};
 
-Server.prototype.createBoards = function(callback) {
+Server.prototype.createBoards = function (callback) {
   log('yellow', 'LOADING BOARDS...');
 
   this.db.collection('boards')
@@ -131,39 +131,39 @@ Server.prototype.createBoards = function(callback) {
 
       results.forEach((board) => {
         const { host, type, port } = board;
-        // Global Settings
-        board.repl = false;
+        const repl = false;
+        let io;
 
         switch (type) {
-          case 'ESP8266':
-          case 'WIFI':
-            var sp = new VirtualSerialPort({
+          case 'WIFI': {
+            const sp = new VirtualSerialPort({
               host,
               type: 'udp4',
-              port: 41234,
+              port: port || 41234,
             });
 
-            board.io = new firmata.Board(sp);
-            board.io.once('ready', function() {
-              board.io.isReady = true;
+            io = new firmata.Board(sp);
+            io.once('ready', () => {
+              io.isReady = true;
             });
-
-            boards.push(board);
             break;
+          }
           default:
             // ...
         }
+
+        boards.push({ ...board, repl, io });
       });
 
       this.boards = new five.Boards(boards);
 
       callback();
     });
-}
+};
 
-Server.prototype.loadAccessories = function(boardId, board) {
+Server.prototype.loadAccessories = function (boardId, board) {
   this.db.collection('accessories')
-    .find({"board": boardId})
+    .find({ board: boardId })
     .toArray((queryErr, results) => {
       if (queryErr) throw new Error(queryErr);
       log('yellow', 'LOADING DEVICES');
@@ -173,9 +173,9 @@ Server.prototype.loadAccessories = function(boardId, board) {
         this.bridge.addBridgedAccessory(accessory);
       });
     });
-}
+};
 
-Server.prototype.connectDB = function(callback) {
+Server.prototype.connectDB = function (callback) {
   mongo.MongoClient.connect(this.config.mongo, (err, db) => {
     if (err) throw new Error(err);
     log('cyan', 'Database connection established');
@@ -183,7 +183,7 @@ Server.prototype.connectDB = function(callback) {
     this.db = db;
 
     return callback();
-  })
+  });
 };
 
 Server.prototype.configServer = function () {
@@ -196,16 +196,16 @@ Server.prototype.configServer = function () {
   app.use(bodyParser.urlencoded({
     extended: true,
   }));
-}
+};
 
 Server.prototype.startServer = function () {
-  let { port, ipaddr } = this.config;
+  const { port, ipaddr } = this.config;
   http.listen(port, ipaddr, () => {
     log('cyan', `HTTP running on ${localAddress}:${port}`);
   });
 
-  routes(app, this.db, five);
-}
+  routes(app, this.db);
+};
 
 // Server.prototype.startSockets = async function () {
 //   io.sockets.on('connection', (socket) => {
@@ -215,12 +215,12 @@ Server.prototype.startServer = function () {
 // }
 
 Server.prototype.printPin = (pincode) => {
-  console.log("Scan this code to pair with HomePi:");
-  console.log(log.colors.black.bgWhite("                       "));
-  console.log(log.colors.black.bgWhite("    ┌────────────┐     "));
+  console.log('Scan this code to pair with HomePi:');
+  console.log(log.colors.black.bgWhite('                       '));
+  console.log(log.colors.black.bgWhite('    ┌────────────┐     '));
   console.log(log.colors.black.bgWhite(`    │ ${pincode} │     `));
-  console.log(log.colors.black.bgWhite("    └────────────┘     "));
-  console.log(log.colors.black.bgWhite("                       "));
+  console.log(log.colors.black.bgWhite('    └────────────┘     '));
+  console.log(log.colors.black.bgWhite('                       '));
 };
 
 module.exports = Server;
