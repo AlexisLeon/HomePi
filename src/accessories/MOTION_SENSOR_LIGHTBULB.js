@@ -8,7 +8,7 @@ const five = require('johnny-five');
 
 module.exports = ({ name, accessory, component, board }) => {
   const sensor = { ...component.sensor, board };
-  const actuator = { ...component.sensor, board };
+  const actuator = { ...component.actuator, board };
 
   const MotionSensorController = {
     sensor: new five.Motion(sensor),
@@ -21,13 +21,14 @@ module.exports = ({ name, accessory, component, board }) => {
     serialNumber: accessory.serialNumber || null,
 
     motionDetected: false,
+    outputLogs: false, // output logs
     status() {
       MotionSensorController.motionDetected = MotionSensorController.sensor.detectedMotion;
-      console.log('MOTION STATUS IS ', MotionSensorController.sensor.detectedMotion);
+      if (this.outputLogs) console.log('MOTION STATUS IS ', MotionSensorController.sensor.detectedMotion);
       return this.motionDetected;
     },
     identify() {
-      console.log('Identify the motion sensor!');
+      if (this.outputLogs) console.log('Identify the motion sensor!');
     },
   };
 
