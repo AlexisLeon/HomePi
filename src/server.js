@@ -161,9 +161,8 @@ Server.prototype.createBoards = function (callback) {
         boards.push({ ...board, repl, io });
       });
 
-      const loadedBoards = new five.Boards(boards);
-      this.boards = loadedBoards;
-      callback(loadedBoards);
+      this.boards = new five.Boards(boards);
+      callback(this.boards);
     });
 };
 
@@ -182,8 +181,6 @@ Server.prototype.loadBoards = function (boards) {
 
 Server.prototype.loadAccessories = function (board) {
   const { id } = board;
-
-  console.log(`loading for ${id}`);
 
   this.db.collection('accessories')
     .find({ board: id })
