@@ -1,9 +1,10 @@
-#!/usr/bin/env node --harmony
+#!/usr/bin/node --harmony
 
 process.title = 'HomePi';
 
 const path = require('path');
 const fs = require('fs');
+
 const src = path.join(path.dirname(fs.realpathSync(__filename)), '../src');
 
 require(src + '/cli')();
