@@ -37,7 +37,7 @@ const {
 function Server() {
   storage.initSync({ dir: Path.cachedAccessoryPath() });
 
-  this.boardReady = false;
+  this.boardsReady = false;
 
   this.config = this.loadConfig();
   this.bridge = this.createBridge();
@@ -47,14 +47,7 @@ Server.prototype.run = function () {
   const that = this;
 
   this.connectDB(() => {
-    that.createBoards(() => {
-      that.boards.on('ready', () => {
-        log('yellow', 'BOARDS READY');
-
-        this.each(board => that.loadAccessories(board.id, board));
-      });
-    });
-
+    that.createBoards(boards => that.loadBoards(boards));
     that.configServer();
     that.startServer();
     that.publishBridge();
@@ -120,7 +113,7 @@ Server.prototype.createBridge = function () {
 };
 
 Server.prototype.createBoards = function (callback) {
-  log('yellow', 'LOADING BOARDS...');
+  log('yellow', 'Looking for boards...');
 
   this.db.collection('boards')
     .find({})
@@ -128,11 +121,23 @@ Server.prototype.createBoards = function (callback) {
       if (queryErr) throw new Error(queryErr);
 
       const boards = [];
+      const boardsFound = results.length;
+      let boardsLoaded = 0;
+
+      const handleLoadedBoard = () => {
+        boardsLoaded += 1;
+
+        if (boardsFound === boardsLoaded) {
+          this.boardsReady = true;
+        }
+      };
 
       results.forEach((board) => {
-        const { host, type, port } = board;
+        const { id, host, type, port } = board;
         const repl = false;
         let io;
+
+        log('yellow', `Board found: ${host} '${id}'`);
 
         switch (type) {
           case 'WIFI': {
@@ -145,6 +150,7 @@ Server.prototype.createBoards = function (callback) {
             io = new firmata.Board(sp);
             io.once('ready', () => {
               io.isReady = true;
+              handleLoadedBoard();
             });
             break;
           }
@@ -155,23 +161,45 @@ Server.prototype.createBoards = function (callback) {
         boards.push({ ...board, repl, io });
       });
 
-      this.boards = new five.Boards(boards);
-
-      callback();
+      const loadedBoards = new five.Boards(boards);
+      this.boards = loadedBoards;
+      callback(loadedBoards);
     });
 };
 
-Server.prototype.loadAccessories = function (boardId, board) {
+Server.prototype.loadBoards = function (boards) {
+  log('yellow', 'Loading boards...');
+
+  const that = this;
+  boards.on('ready', function () {
+    // console.log(that.boardsReady);
+    log('yellow', 'Boards ready');
+    log('yellow', 'Loading accessories...');
+
+    this.each(board => that.loadAccessories(board));
+  });
+};
+
+Server.prototype.loadAccessories = function (board) {
+  const { id } = board;
+
+  console.log(`loading for ${id}`);
+
   this.db.collection('accessories')
-    .find({ board: boardId })
+    .find({ board: id })
     .toArray((queryErr, results) => {
       if (queryErr) throw new Error(queryErr);
-      log('yellow', 'LOADING DEVICES');
+      if (results.length >= 1) {
+        const term = `accessor${results.length > 1 ? 'ies' : 'y'}`;
+        log('yellow', `${results.length} ${term} found for board ${id}`);
 
-      const accessories = AccessoryLoader(results, board);
-      accessories.forEach((accessory) => {
-        this.bridge.addBridgedAccessory(accessory);
-      });
+        const accessories = AccessoryLoader(results, board);
+        accessories.forEach((accessory) => {
+          this.bridge.addBridgedAccessory(accessory);
+        });
+      } else {
+        log('yellow', `No accessories found for board '${id}'`);
+      }
     });
 };
 
