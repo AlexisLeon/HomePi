@@ -24,8 +24,18 @@ sudo apt-get install libavahi-compat-libdnssd-dev
 **[Node JS](https://nodejs.org)**
 
   ```bash
+  wget https://nodejs.org/dist/v8.2.1/node-v8.2.1-linux-armv7l.tar.gz
+  tar -xvf node-v8.2.1-linux-armv7l.tar.gz 
+  cd node-v8.2.1-linux-armv7l
+  sudo cp -R * /usr/local/
+  ```
+
+  Or using pkg manager:
+  ```bash
   curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
   sudo apt-get update && sudo apt-get install nodejs
+  sudo ln -s $(which nodejs) /usr/local/bin/node
+
   ```
 
 **[MongoDB](https://www.mongodb.org/downloads)**
