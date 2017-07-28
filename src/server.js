@@ -167,19 +167,24 @@ Server.prototype.createBoards = function (callback) {
 };
 
 Server.prototype.loadBoards = function (boards) {
+  const that = this;
+
   log('yellow', 'Loading boards...');
 
-  const that = this;
-  boards.on('ready', function () {
-    // console.log(that.boardsReady);
-    log('yellow', 'Boards ready');
-    log('yellow', 'Loading accessories...');
+  boards.each((board) => {
+    board.on('ready', () => {
+      // console.log(that.boardsReady);
+      log('yellow', `Board ${board.id} ready`);
+      log('yellow', `Loading ${board.id} accessories...`);
 
-    this.each(board => that.loadAccessories(board));
+      that.loadAccessories(board);
+    });
   });
 };
 
 Server.prototype.loadAccessories = function (board) {
+  log('yellow', 'Loading accessories for board...');
+
   const { id } = board;
 
   this.db.collection('accessories')
